@@ -36,10 +36,9 @@ class PreviewWidget(QtWidgets.QFrame):
         self.setLayout(layout)
 
         pixmap = QtGui.QPixmap('preview/preview.png')
-        book = reader.book(path)
-        if book is not None and book:
-            cover = book.get_cover_image()
-            pixmap = QtGui.QPixmap(cover)
+        with reader.book(path) as book:
+            cover = book.get_cover_image_content()
+            pixmap.loadFromData(cover)
 
         label = PreviewLabel(self, pixmap)
         label.clicked.connect(lambda x: self.book.emit(book))

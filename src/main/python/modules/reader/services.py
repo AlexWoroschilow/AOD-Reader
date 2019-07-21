@@ -22,36 +22,36 @@ class BookReader(object):
     def __init__(self, path=None):
         self.logger = logging.getLogger('reader')
 
-        self.cache = '/tmp/ebook/{}'.format(
+        self.cache = '/tmp/aod-reader/{}'.format(
             self.get_unique(path)
         )
 
-        self.path = path
+        self.ebook = path
 
-        if not os.path.exists(self.cache):
-            with zipfile.ZipFile(self.path, 'r') as stream:
-                stream.extractall(self.cache)
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        pass
 
     def _get_source_content(self):
         """
         looking for the file "content.opf"
         :return:
         """
-        with open('{}/META-INF/container.xml'.format(self.cache), 'rb') as stream:
-            try:
-                stream_dict = xmltodict.parse(stream.read())
-                href = stream_dict['container']['rootfiles']['rootfile']['@full-path']
-                source = '{}/{}'.format(self.cache, href)
-                if os.path.exists(source):
-                    return source
-                source = '{}/OEBPS/{}'.format(self.cache, href)
-                if os.path.exists(source):
-                    return source
+        try:
 
-                return None
+            def parse(stream_dict=None, zipstream=None):
+                if stream_dict is None or zipstream is None:
+                    return None
+                return stream_dict['container']['rootfiles']['rootfile']['@full-path']
 
-            except Exception as ex:
-                self.logger.error(ex)
+            with zipfile.ZipFile(self.ebook, 'r') as zipstream:
+                with zipstream.open('META-INF/container.xml') as stream:
+                    return parse(xmltodict.parse(stream.read()), zipstream)
+
+        except Exception as ex:
+            self.logger.error(ex)
         return None
 
     def _get_source_content_table(self):
@@ -59,23 +59,34 @@ class BookReader(object):
         looking for the file "toc.ncx"
         :return:
         """
-        with open(self._get_source_content(), 'rb') as stream:
-            stream_dict = xmltodict.parse(stream.read())
-            for item in stream_dict['package']['manifest']['item']:
-                if item['@id'] == 'ncx':
-                    href = item['@href']
-                    source = '{}/{}'.format(self.cache, href)
-                    if os.path.exists(source):
-                        return source
-                    source = '{}/OEBPS/{}'.format(self.cache, href)
-                    if os.path.exists(source):
-                        return source
+        try:
+
+            def parse(stream_dict=None, root=None):
+                if stream_dict is None:
                     return None
+
+                for item in stream_dict['package']['manifest']['item']:
+                    if item['@id'] == 'ncx':
+                        if root is None or not len(root):
+                            return item['@href']
+                        return '{}/{}'.format(root, item['@href'])
+                return None
+
+            with zipfile.ZipFile(self.ebook, 'r') as zipstream:
+
+                content_file = self._get_source_content()
+                content_folder = os.path.dirname(content_file)
+
+                with zipstream.open(content_file) as stream:
+                    return parse(xmltodict.parse(stream.read()), content_folder)
+
+        except Exception as ex:
+            self.logger.error(ex)
         return None
 
     def get_unique(self, path=None):
         if path is None:
-            path = self.path
+            path = self.ebook
 
         if path is None:
             return None
@@ -83,27 +94,52 @@ class BookReader(object):
         return uuid.uuid5(uuid.NAMESPACE_URL, path)
 
     def get_title(self):
-        with open(self._get_source_content(), 'rb') as stream:
-            try:
-                stream_dict = xmltodict.parse(stream.read())
+        try:
+
+            def parse(stream_dict=None, root=None):
+                if stream_dict is None:
+                    return None
                 return stream_dict['package']['metadata']['dc:title']
-            except Exception as ex:
-                self.logger.error(ex)
+
+            with zipfile.ZipFile(self.ebook, 'r') as zipstream:
+
+                content_file = self._get_source_content()
+                content_folder = os.path.dirname(content_file)
+
+                with zipstream.open(content_file) as stream:
+                    return parse(xmltodict.parse(stream.read()), content_folder)
+
+        except Exception as ex:
+            self.logger.error(ex)
         return None
 
     def get_language(self):
-        with open(self._get_source_content(), 'rb') as stream:
-            try:
-                stream_dict = xmltodict.parse(stream.read())
+        try:
+
+            def parse(stream_dict=None, root=None):
+                if stream_dict is None:
+                    return None
                 return stream_dict['package']['metadata']['dc:language']
-            except Exception as ex:
-                self.logger.error(ex)
+
+            with zipfile.ZipFile(self.ebook, 'r') as zipstream:
+
+                content_file = self._get_source_content()
+                content_folder = os.path.dirname(content_file)
+
+                with zipstream.open(content_file) as stream:
+                    return parse(xmltodict.parse(stream.read()), content_folder)
+
+        except Exception as ex:
+            self.logger.error(ex)
         return None
 
     def get_cover_image(self):
-        with open(self._get_source_content(), 'rb') as stream:
-            try:
-                stream_dict = xmltodict.parse(stream.read())
+        try:
+
+            def parse(stream_dict=None, root=None):
+                if stream_dict is None:
+                    return None
+
                 for item in stream_dict['package']['manifest']['item']:
                     if item['@id'] not in ['cover', 'coverimage', 'cover-image']:
                         continue
@@ -111,21 +147,67 @@ class BookReader(object):
                         continue
 
                     href = item['@href']
-                    source = '{}/{}'.format(self.cache, href)
-                    if os.path.exists(source):
-                        return source
-                    source = '{}/OEBPS/{}'.format(self.cache, href)
-                    if os.path.exists(source):
-                        return source
+                    if root is not None and len(root):
+                        href = '{}/{}'.format(root, href)
+
+                    return 'file://{}/{}'.format(self.cache, href)
+
                 return None
-            except Exception as ex:
-                self.logger.error(ex)
+
+            with zipfile.ZipFile(self.ebook, 'r') as zipstream:
+
+                content_file = self._get_source_content()
+                content_folder = os.path.dirname(content_file)
+
+                with zipstream.open(content_file) as stream:
+                    return parse(xmltodict.parse(stream.read()), content_folder)
+
+        except Exception as ex:
+            self.logger.error(ex)
+        return None
+
+    def get_cover_image_content(self):
+        try:
+
+            def parse(stream_dict=None, root=None):
+                if stream_dict is None:
+                    return None
+
+                for item in stream_dict['package']['manifest']['item']:
+                    if item['@id'] not in ['cover', 'coverimage', 'cover-image']:
+                        continue
+                    if item['@media-type'].find('image') == -1:
+                        continue
+
+                    href = item['@href']
+                    if root is not None and len(root):
+                        href = '{}/{}'.format(root, href)
+
+                    with zipstream.open(href) as stream:
+                        return stream.read()
+
+                return None
+
+            with zipfile.ZipFile(self.ebook, 'r') as zipstream:
+
+                content_file = self._get_source_content()
+                content_folder = os.path.dirname(content_file)
+
+                with zipstream.open(content_file) as stream:
+                    return parse(xmltodict.parse(stream.read()), content_folder)
+
+        except Exception as ex:
+            self.logger.error(ex)
         return None
 
     def get_cover_page(self):
-        with open(self._get_source_content(), 'rb') as stream:
-            try:
-                stream_dict = xmltodict.parse(stream.read())
+
+        try:
+
+            def parse(stream_dict=None, root=None):
+                if stream_dict is None:
+                    return None
+
                 for item in stream_dict['package']['manifest']['item']:
                     if item['@id'] not in ['cover', 'coverpage', 'cover-page']:
                         continue
@@ -133,97 +215,135 @@ class BookReader(object):
                         continue
 
                     href = item['@href']
-                    source = '{}/{}'.format(self.cache, href)
-                    if os.path.exists(source):
-                        return 'file://{}'.format(source)
-                    source = '{}/OEBPS/{}'.format(self.cache, href)
-                    if os.path.exists(source):
-                        return 'file://{}'.format(source)
+                    if root is not None and len(root):
+                        href = '{}/{}'.format(root, href)
+
+                    return 'file://{}/{}'.format(self.cache, href)
+
                 return None
-            except Exception as ex:
-                self.logger.error(ex)
+
+            with zipfile.ZipFile(self.ebook, 'r') as zipstream:
+
+                content_file = self._get_source_content()
+                content_folder = os.path.dirname(content_file)
+
+                with zipstream.open(content_file) as stream:
+                    return parse(xmltodict.parse(stream.read()), content_folder)
+
+        except Exception as ex:
+            self.logger.error(ex)
         return None
 
     def get_stylesheet(self):
-        with open(self._get_source_content(), 'rb') as stream:
-            try:
-                stream_dict = xmltodict.parse(stream.read())
+        try:
+
+            def parse(stream_dict=None, root=None):
+                if stream_dict is None:
+                    return None
+
                 for item in stream_dict['package']['manifest']['item']:
                     if item['@media-type'].find('css') == -1:
                         continue
 
                     href = item['@href']
-                    source = '{}/{}'.format(self.cache, href)
-                    if os.path.exists(source):
-                        yield 'file://{}'.format(source)
-                    source = '{}/OEBPS/{}'.format(self.cache, href)
-                    if os.path.exists(source):
-                        yield 'file://{}'.format(source)
+                    if root is not None and len(root):
+                        href = '{}/{}'.format(root, href)
+
+                    yield 'file://{}/{}'.format(self.cache, href)
+
                 return None
-            except Exception as ex:
-                self.logger.error(ex)
+
+            with zipfile.ZipFile(self.ebook, 'r') as zipstream:
+
+                content_file = self._get_source_content()
+                content_folder = os.path.dirname(content_file)
+
+                with zipstream.open(content_file) as stream:
+                    return parse(xmltodict.parse(stream.read()), content_folder)
+
+        except Exception as ex:
+            self.logger.error(ex)
         return None
-
-    def _get_content_table_recursive(self, items):
-
-        collection = []
-        for item in items:
-
-            src = item['content']['@src']
-            source = '{}/OEBPS/{}'.format(self.cache, src)
-            if not os.path.exists(source):
-                source = '{}/{}'.format(self.cache, src)
-
-            label = item['navLabel']['text']
-            order = int(item['@playOrder'])
-
-            collection.append((label, 'file://{}'.format(source), order))
-            if 'navPoint' not in item.keys():
-                continue
-
-            children = self._get_content_table_recursive(item['navPoint'])
-            collection = collection + children
-
-        return collection
 
     def get_content_table(self):
         collection = []
 
-        with open(self._get_source_content_table(), 'rb') as stream:
-            try:
-                stream_dict = xmltodict.parse(stream.read())
+        try:
+
+            def parse_recursive(items, root=None):
+
+                collection = []
+                for item in items:
+
+                    src = item['content']['@src']
+                    if root is not None and len(root):
+                        src = '{}/{}'.format(root, src)
+
+                    label = item['navLabel']['text']
+                    order = int(item['@playOrder'])
+
+                    collection.append((label, 'file://{}/{}'.format(self.cache, src), order))
+                    if 'navPoint' not in item.keys():
+                        continue
+
+                    children = parse_recursive(item['navPoint'], root)
+                    collection = collection + children
+
+                return collection
+
+            def parse(stream_dict=None, collection=None, root=None):
                 navPoint = stream_dict['ncx']['navMap']['navPoint']
                 if type(navPoint) == OrderedDict:
                     navPoint = [navPoint]
 
-                children = self._get_content_table_recursive(navPoint)
+                children = parse_recursive(navPoint, root)
                 return collection + children
 
-            except Exception as ex:
-                raise ex
+            with zipfile.ZipFile(self.ebook, 'r') as zipstream:
+
+                content_file = self._get_source_content_table()
+                content_folder = os.path.dirname(content_file)
+
+                with zipstream.open(content_file) as stream:
+                    return parse(xmltodict.parse(stream.read()), collection, content_folder)
+
+        except Exception as ex:
+            raise ex
         return sorted(collection, key=lambda entity: entity[2])
 
     def get_pages(self):
         collection = []
 
-        with open(self._get_source_content(), 'rb') as stream:
-            try:
-                stream_dict = xmltodict.parse(stream.read())
+        if not os.path.exists(self.cache):
+            with zipfile.ZipFile(self.ebook, 'r') as stream:
+                stream.extractall(self.cache)
+
+        try:
+
+            def parse(stream_dict=None, root=None):
+                if stream_dict is None:
+                    return None
+
                 for item in stream_dict['package']['manifest']['item']:
                     if item['@media-type'].find('xhtml') == -1:
                         continue
 
                     href = item['@href']
-                    source = '{}/{}'.format(self.cache, href)
-                    if os.path.exists(source):
-                        yield 'file://{}'.format(source)
+                    if root is not None and len(root):
+                        href = '{}/{}'.format(root, href)
 
-                    source = '{}/OEBPS/{}'.format(self.cache, href)
-                    if os.path.exists(source):
-                        yield 'file://{}'.format(source)
+                    yield 'file://{}/{}'.format(self.cache, href)
 
-            except Exception as ex:
-                self.logger.error(ex)
+            with zipfile.ZipFile(self.ebook, 'r') as zipstream:
+
+                content_file = self._get_source_content()
+                content_folder = os.path.dirname(content_file)
+
+                with zipstream.open(content_file) as stream:
+                    return parse(xmltodict.parse(stream.read()), content_folder)
+
+        except Exception as ex:
+            self.logger.error(ex)
         return sorted(collection, key=lambda entity: entity[0])
 
 
@@ -234,7 +354,7 @@ class ReaderService(object):
 
 
 if __name__ == "__main__":
-    book = '/home/sensey/Books/[Philip_Reeve]_Night_Flights(z-lib.org).epub'
+    book = '/home/sensey/Books/18850745.epub'
     reader = BookReader(book)
     print(reader.get_title())
     print(reader.get_language())
