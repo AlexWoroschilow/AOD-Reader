@@ -51,10 +51,6 @@ class BrowserWidget(QtWidgets.QFrame):
         splitter.setStretchFactor(2, 2)
 
         self.layout().addWidget(splitter)
+        self.page.connect(self.browser.bookPage.emit)
         self.book.connect(self.browser.book.emit)
         self.book.connect(self.toolbar.book.emit)
-        self.page.connect(self.pageEvent)
-
-    def pageEvent(self, path=None):
-        url = QtCore.QUrl(path)
-        self.browser.page().setUrl(url)
