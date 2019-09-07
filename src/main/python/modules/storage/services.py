@@ -29,9 +29,11 @@ class StorageService(object):
         collection = []
         while len(sources):
             source = sources.pop()
-            for path in glob.glob('{}/*.epub'.format(source)):
+            for path in glob.glob('{}/*'.format(source)):
                 if os.path.isdir(path):
                     sources.append(path)
                     continue
-                collection.append(path)
+                if path.rfind('epub') != -1:
+                    collection.append(path)
+                    print(path)
         return collection

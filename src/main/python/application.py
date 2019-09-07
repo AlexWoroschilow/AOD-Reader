@@ -44,7 +44,7 @@ class Application(QtWidgets.QApplication):
         from PyQt5.QtCore import QEventLoop
         self.processEvents(QEventLoop.ExcludeUserInputEvents | QEventLoop.ExcludeSocketNotifiers | QEventLoop.WaitForMoreEvents)
 
-        self.setApplicationName('AOD - Dictionary')
+        self.setApplicationName('AOD - EBookReader')
         self.kernel = Kernel(options, args)
         self.kernel.application = self
 

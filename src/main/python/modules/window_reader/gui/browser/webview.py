@@ -38,6 +38,14 @@ class MyWebEnginePage(QWebEnginePage):
     def removeUserStylesheet(self):
         self.runJavaScript(""" document.getElementById('customstyle').outerHTML = ""; """)
 
+    def getScrollPosition(self, callback=None):
+        javascript = "(function () { return window.scrollY; })();"
+        self.runJavaScript(javascript, callback)  # scrool selected page to the given position
+
+    def setScrollPosition(self, position):
+        javascript = "window.scrollTo(0,parseFloat('{}'));".format(position)
+        self.runJavaScript(javascript)  # scrool selected page to the given position
+
 
 class MyWebEngineView(QWebEngineView):
     zoom = 1
@@ -78,13 +86,14 @@ class MyWebEngineView(QWebEngineView):
                 config.set('browser.zoom', self.zoom)
                 self.setZoomFactor(self.zoom)
 
-        book_unique = self.ebook.get_unique()
-        if book_unique is not None and book_unique:
-            position = self.page().scrollPosition()
-            print(position)
-            config.set('{}.position'.format(book_unique), position.y())
-
+        self.page().getScrollPosition(self.scrollPositionEvent)
         return super(MyWebEngineView, self).wheelEvent(event)
+
+    @inject.params(config='config')
+    def scrollPositionEvent(self, position, config):
+        book_unique = self.ebook.get_unique()
+        config.set('{}.position'.format(book_unique), position)
+        print(config.get('{}.position'.format(book_unique)))
 
     @inject.params(config='config')
     def bookEvent(self, book=None, config=None):
@@ -118,9 +127,8 @@ class MyWebEngineView(QWebEngineView):
         book_unique = self.ebook.get_unique()
         if book_unique is not None and book_unique:
             position = config.get('{}.position'.format(book_unique), 0)
-            script = "window.scrollTo(0,parseFloat('{}'));".format(position)
-            print(script)
-            self.page().runJavaScript(script)  # scrool selected page to the given position
+            # scrool selected page to the given position
+            self.page().setScrollPosition(position)
 
         with open('css/ebook.css', 'r') as stream:
             stylesheet = stream.readlines()

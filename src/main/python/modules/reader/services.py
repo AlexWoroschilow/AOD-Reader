@@ -10,6 +10,8 @@
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+from typing import List, Any, Tuple
+
 import os
 import uuid
 import zipfile
@@ -99,6 +101,7 @@ class BookReader(object):
             def parse(stream_dict=None, root=None):
                 if stream_dict is None:
                     return None
+                print(stream_dict['package']['metadata']['dc:title'])
                 return stream_dict['package']['metadata']['dc:title']
 
             with zipfile.ZipFile(self.ebook, 'r') as zipstream:
@@ -271,23 +274,27 @@ class BookReader(object):
         try:
 
             def parse_recursive(items, root=None):
-
                 collection = []
-                for item in items:
 
-                    src = item['content']['@src']
-                    if root is not None and len(root):
-                        src = '{}/{}'.format(root, src)
+                try:
+                    for item in items:
 
-                    label = item['navLabel']['text']
-                    order = int(item['@playOrder'])
+                        src = item['content']['@src']
+                        if root is not None and len(root):
+                            src = '{}/{}'.format(root, src)
 
-                    collection.append((label, 'file://{}/{}'.format(self.cache, src), order))
-                    if 'navPoint' not in item.keys():
-                        continue
+                        label = item['navLabel']['text']
+                        order = int(item['@playOrder'])
 
-                    children = parse_recursive(item['navPoint'], root)
-                    collection = collection + children
+                        collection.append((label, 'file://{}/{}'.format(self.cache, src), order))
+                        if 'navPoint' not in item.keys():
+                            continue
+
+                        children = parse_recursive(item['navPoint'], root)
+                        collection = collection + children
+
+                except (Exception, TypeError) as ex:
+                    print(ex)
 
                 return collection
 
@@ -307,8 +314,9 @@ class BookReader(object):
                 with zipstream.open(content_file) as stream:
                     return parse(xmltodict.parse(stream.read()), collection, content_folder)
 
-        except Exception as ex:
+        except (Exception, TypeError) as ex:
             raise ex
+
         return sorted(collection, key=lambda entity: entity[2])
 
     def get_pages(self):

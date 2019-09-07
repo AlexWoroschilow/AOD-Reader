@@ -29,8 +29,9 @@ from PyQt5 import QtPrintSupport
 from PyQt5 import QtGui
 from PyQt5.QtCore import Qt
 from importlib import util
+from PyQt5.QtWebEngineWidgets import QWebEngineView, QWebEnginePage, QWebEngineProfile
 
-from fbs_runtime.application_context import ApplicationContext
+from fbs_runtime.application_context.PyQt5 import ApplicationContext
 
 abspath = os.path.abspath(__file__)
 os.chdir(os.path.dirname(abspath))

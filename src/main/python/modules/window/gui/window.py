@@ -29,7 +29,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def __init__(self, parent=None):
         super(MainWindow, self).__init__(parent)
         self.setContentsMargins(0, 0, 0, 0)
-        self.setWindowTitle('AOD-Reader')
+        self.setWindowTitle('AOD-EBookReader')
 
         if os.path.exists('icons/reader.svg'):
             self.setWindowIcon(QtGui.QIcon("icons/reader"))

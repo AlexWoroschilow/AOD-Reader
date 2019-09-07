@@ -14,8 +14,10 @@ import inject
 from PyQt5 import QtWidgets
 from PyQt5 import QtCore
 
+from .list import ContentPagesWidget
 from .list import ContentTableWidget
 from .browser.widget import BrowserWidget
+from .tab import PageContentTable
 
 
 # class WindowContent(QtWidgets.QTabWidget):
@@ -46,6 +48,13 @@ class ReaderWidget(QtWidgets.QTabWidget):
         self.ctable = ContentTableWidget(self)
         self.ctable.page.connect(self.page.emit)
 
+        self.cpages = ContentPagesWidget(self)
+        self.cpages.page.connect(self.page.emit)
+
+        tab = PageContentTable()
+        tab.addTab(self.cpages, 'Pages')
+        tab.addTab(self.ctable, 'Content table')
+
         self.browser = BrowserWidget(self)
         self.browser.translate.connect(self.translate.emit)
         self.browser.back.connect(self.back.emit)
@@ -54,7 +63,7 @@ class ReaderWidget(QtWidgets.QTabWidget):
         splitter.setContentsMargins(0, 0, 0, 0)
         splitter.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
-        splitter.addWidget(self.ctable)
+        splitter.addWidget(tab)
         splitter.addWidget(self.browser)
 
         splitter.setStretchFactor(1, 2)
@@ -70,3 +79,4 @@ class ReaderWidget(QtWidgets.QTabWidget):
         self.translate.connect(self.history.translate.emit)
 
         self.book.connect(self.ctable.book.emit)
+        self.book.connect(self.cpages.book.emit)

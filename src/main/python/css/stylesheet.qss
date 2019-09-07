@@ -12,26 +12,27 @@ Title { text-align: center; font-size: 18px; padding: 5px 0px; }
 CollectionWidget { margin: 0px; }
 CollectionWidget SearchField { font-size: 16px; margin: 10px; margin: 10px; }
 
-QListView { background: #515659; alternate-background-color: #515659; border-top: 1px solid #414649; font-size: 16px;  }
-QListView::item { border-bottom: 1px solid #414649; color: #C0C0C0; padding: 10px; }
-QListView::item:hover { alternate-background-color: #414649; border-bottom: 1px solid #414649; background: #414649; }
-QListView::item:selected:active { alternate-background-color: #414649; border-bottom: 1px solid #414649; background: #414649; }
-QListView::item:hover:selected { alternate-background-color: #414649; border-bottom: 1px solid #414649; background: #414649; }
-QListView::item:selected { alternate-background-color: #414649; border-bottom: 1px solid #414649; background: #414649; }
 
 
 TranslationWidget { border: none; background: #eff0f1; }
 
-ReaderWidget { background: #eff0f1; border: none; margin: 0px; }
-ReaderWidget::pane { background: #eff0f1; border: none; margin: 0px; }
-ReaderWidget::tab-bar { left: 0px; color: #4F4F4F; }
+ReaderWidget { background: #414649; border: none; margin: 0px; }
+ReaderWidget QListView { background: #515659;  alternate-background-color: #414649; }
+ReaderWidget QListView::item { background: #515659; border-bottom: 1px solid #414649; color: #C0C0C0; padding: 10px; }
+ReaderWidget QListView::item:hover { alternate-background-color: #414649; border-bottom: 1px solid #414649; background: #414649; }
+ReaderWidget QListView::item:selected:active { alternate-background-color: #414649; border-bottom: 1px solid #414649; background: #414649; }
+ReaderWidget QListView::item:hover:selected { alternate-background-color: #414649; border-bottom: 1px solid #414649; background: #414649; }
+ReaderWidget QListView::item:selected { alternate-background-color: #414649; border-bottom: 1px solid #414649; background: #414649; }
 
-QTabBar { background: rgb(236,236,236); color: #4F4F4F; font-size: 16px; }
-QTabBar::tab { background: #414649; color: rgb(236,236,236); border-right: 1px solid #414649; padding: 5px; }
-QTabBar::tab:selected { background: #515659; }
-QTabBar::tab:!selected { background: #414649; }
-QTabBar::close-button { image: url(icons/close-light); }
-
+ReaderWidget::pane { background: #414649; border: none; margin: 0px; }
+ReaderWidget QTabBar { color: #4F4F4F; font-size: 16px; border: none; background: #414649; }
+ReaderWidget QTabBar::tab { background: #414649; color: rgb(236,236,236); border-right: 1px solid #414649; padding: 5px; }
+ReaderWidget QTabBar::tab:selected { background: #515659; }
+ReaderWidget QTabBar::tab:!selected { background: #414649; }
+ReaderWidget QTabBar::close-button { image: url(icons/close-light); }
+ReaderWidget PageContentTable { border: none; margin: 0px;  }
+ReaderWidget PageContentTable::pane { background: #414649; }
+ReaderWidget BrowserWidget { background: #eff0f1; border: none; margin: 0px; }
 
 HistoryWidget HistoryToolbar { background: #515659; min-width: 44px; }
 HistoryWidget HistoryTable { margin: 0px; border: 0px; }
