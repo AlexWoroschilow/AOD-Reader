@@ -101,8 +101,10 @@ class BookReader(object):
             def parse(stream_dict=None, root=None):
                 if stream_dict is None:
                     return None
-                print(stream_dict['package']['metadata']['dc:title'])
-                return stream_dict['package']['metadata']['dc:title']
+                result = stream_dict['package']['metadata']['dc:title']
+                if type(result) == OrderedDict:
+                    return result.pop()
+                return result
 
             with zipfile.ZipFile(self.ebook, 'r') as zipstream:
 
