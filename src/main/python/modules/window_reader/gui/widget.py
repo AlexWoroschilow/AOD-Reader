@@ -13,21 +13,14 @@
 import inject
 from PyQt5 import QtWidgets
 from PyQt5 import QtCore
+from PyQt5 import QtGui
+from PyQt5.QtCore import Qt
 
 from .list import ContentPagesWidget
 from .list import ContentTableWidget
 from .browser.widget import BrowserWidget
 from .tab import PageContentTable
 
-
-# class WindowContent(QtWidgets.QTabWidget):
-#
-#     @inject.params(kernel='kernel', logger='logger')
-#     def __init__(self, parent=None, kernel=None, logger=None):
-#         super(WindowContent, self).__init__(parent)
-#         self.setTabPosition(QtWidgets.QTabWidget.West)
-#         self.setContentsMargins(0, 0, 0, 0)
-#
 
 class ReaderWidget(QtWidgets.QTabWidget):
     settings = QtCore.pyqtSignal(object)
@@ -42,8 +35,6 @@ class ReaderWidget(QtWidgets.QTabWidget):
         self.setTabPosition(QtWidgets.QTabWidget.West)
         self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self.setContentsMargins(0, 0, 0, 0)
-
-        self.history = history
 
         self.ctable = ContentTableWidget(self)
         self.ctable.page.connect(self.page.emit)
@@ -75,8 +66,8 @@ class ReaderWidget(QtWidgets.QTabWidget):
         self.book.connect(self.browser.book.emit)
         self.page.connect(self.browser.page.emit)
 
-        self.book.connect(self.history.book.emit)
-        self.translate.connect(self.history.translate.emit)
+        self.book.connect(history.book.emit)
+        self.translate.connect(history.translate.emit)
 
         self.book.connect(self.ctable.book.emit)
         self.book.connect(self.cpages.book.emit)

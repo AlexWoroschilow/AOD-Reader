@@ -20,7 +20,7 @@ from .bar import HistoryToolbar
 from .table import HistoryTable
 
 
-class HistoryWidget(QtWidgets.QWidget):
+class HistoryWidget(QtWidgets.QFrame):
     translate = QtCore.pyqtSignal(object)
     book = QtCore.pyqtSignal(object)
 
@@ -41,14 +41,14 @@ class HistoryWidget(QtWidgets.QWidget):
         self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self.setContentsMargins(0, 0, 0, 0)
 
-        layout = QtWidgets.QHBoxLayout(self)
+        layout = QtWidgets.QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(layout)
 
         self.toolbar = HistoryToolbar()
-        self.toolbar.exportCsv.connect(lambda x=None: self.exportCsv.emit(self.history))
-        self.toolbar.exportAnki.connect(lambda x=None: self.exportAnki.emit(self.history))
-        self.toolbar.listClean.connect(lambda x=None: self.listClean.emit(self.history))
+        self.toolbar.csv.connect(lambda x=None: self.exportCsv.emit(self.history))
+        self.toolbar.clean.connect(lambda x=None: self.listClean.emit(self.history))
+        self.toolbar.anki.connect(lambda x=None: self.exportAnki.emit(self.history))
 
         self.table = HistoryTable()
         self.table.rowUpdate.connect(self.rowUpdate.emit)

@@ -25,6 +25,8 @@ class PreviewWidget(QtWidgets.QFrame):
     delete = QtCore.pyqtSignal(object)
     clone = QtCore.pyqtSignal(object)
 
+    limit = 25
+
     @inject.params(reader='reader')
     def __init__(self, path=None, reader=None):
         super(PreviewWidget, self).__init__()
@@ -35,10 +37,19 @@ class PreviewWidget(QtWidgets.QFrame):
         layout.setAlignment(Qt.AlignTop)
         self.setLayout(layout)
 
-        pixmap = QtGui.QPixmap('preview/preview.png')
+        pixmap = QtGui.QPixmap('preview/preview.svg')
         with reader.book(path) as book:
+            title = book.get_title()
+            if title is not None and len(title):
+                title = title if len(title) < self.limit else \
+                    "{}...".format(title[0:self.limit])
+
+                title_label = QtWidgets.QLabel(title)
+                self.layout().addWidget(title_label)
+
             cover = book.get_cover_image_content()
-            pixmap.loadFromData(cover)
+            if cover is not None:
+                pixmap.loadFromData(cover)
 
         label = PreviewLabel(self, pixmap)
         label.clicked.connect(lambda x: self.book.emit(book))
