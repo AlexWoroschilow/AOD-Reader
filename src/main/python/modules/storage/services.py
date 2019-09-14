@@ -35,5 +35,4 @@ class StorageService(object):
                     continue
                 if path.rfind('epub') != -1:
                     collection.append(path)
-                    print(path)
         return collection

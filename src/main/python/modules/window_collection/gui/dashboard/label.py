@@ -20,8 +20,7 @@ class PreviewLabel(QtWidgets.QLabel):
 
     def __init__(self, parent, picture=None):
         super(PreviewLabel, self).__init__(parent)
-
-        self.setPixmap(picture.scaledToWidth(180, Qt.FastTransformation))
+        self.setPixmap(picture.scaledToWidth(300, Qt.FastTransformation))
 
     def mousePressEvent(self, event):
         self.clicked.emit(event)

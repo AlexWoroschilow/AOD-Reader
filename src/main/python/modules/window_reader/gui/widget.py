@@ -37,9 +37,12 @@ class ReaderWidget(QtWidgets.QTabWidget):
         self.setContentsMargins(0, 0, 0, 0)
 
         self.ctable = ContentTableWidget(self)
-        self.ctable.page.connect(self.page.emit)
-
         self.cpages = ContentPagesWidget(self)
+
+        self.ctable.page.connect(self.cpages.pageOpen)
+        self.cpages.page.connect(self.ctable.pageOpen)
+
+        self.ctable.page.connect(self.page.emit)
         self.cpages.page.connect(self.page.emit)
 
         tab = PageContentTable()
@@ -65,9 +68,26 @@ class ReaderWidget(QtWidgets.QTabWidget):
 
         self.book.connect(self.browser.book.emit)
         self.page.connect(self.browser.page.emit)
+        self.page.connect(self.ctable.pageOpen)
+        self.page.connect(self.cpages.pageOpen)
 
         self.book.connect(history.book.emit)
         self.translate.connect(history.translate.emit)
 
         self.book.connect(self.ctable.book.emit)
         self.book.connect(self.cpages.book.emit)
+
+    @inject.params(config='config')
+    def open(self, ebook=None, config=None):
+        if ebook is None: return None
+        if config is None: return None
+
+        self.book.emit(ebook)
+
+        unique = ebook.get_unique()
+        if unique is None: return None
+
+        page = config.get('{}.page'.format(unique), '')
+        if page is None or not len(page): return None
+
+        self.page.emit(page)

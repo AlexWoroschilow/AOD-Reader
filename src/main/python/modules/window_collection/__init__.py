@@ -13,7 +13,7 @@
 import inject
 import functools
 
-from .thread import TranslatorThread
+from .thread import CollectionThread
 from .gui.widget import CollectionWidget
 
 
@@ -27,7 +27,17 @@ class Loader(object):
 
     @inject.params(window='window')
     def _provider_collection(self, window=None):
-        return CollectionWidget(window)
+        thread = CollectionThread()
+
+        widget = CollectionWidget(window)
+        thread.started.connect(lambda x: widget.progress.setVisible(True))
+        thread.finished.connect(lambda x: widget.progress.setVisible(False))
+        thread.progress.connect(lambda x: widget.progress.setValue(x))
+        thread.book.connect(widget.append)
+
+        thread.start()
+
+        return widget
 
     @inject.params(config='config')
     def _widget_settings(self, config=None):

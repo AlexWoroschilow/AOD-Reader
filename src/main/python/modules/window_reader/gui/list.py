@@ -19,12 +19,20 @@ from PyQt5 import QtGui
 from PyQt5.QtCore import Qt
 
 
-class ContentTableWidget(QtWidgets.QListWidget):
+class ContentItemWidget(QtWidgets.QListWidgetItem):
+    def __init__(self, title=None, page=None):
+        super(ContentItemWidget, self).__init__(title)
+
+        self.setIcon(QtGui.QIcon("icons/folder-light"))
+        self.href = page
+
+
+class ContentWidget(QtWidgets.QListWidget):
     page = QtCore.pyqtSignal(object)
     book = QtCore.pyqtSignal(object)
 
     def __init__(self, parent=None):
-        super(ContentTableWidget, self).__init__(parent)
+        super(ContentWidget, self).__init__(parent)
         self.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
@@ -40,62 +48,52 @@ class ContentTableWidget(QtWidgets.QListWidget):
 
     def bookEvent(self, book=None):
 
-        if self.model() is None:
-            model = QtGui.QStandardItemModel()
-            self.setModel(model)
+        if self.model() is None or not self.model():
+            self.setModel(QtGui.QStandardItemModel())
 
         for element in book.get_content_table():
             title, href, order = element
-
-            item = QtWidgets.QListWidgetItem(title)
-            item.setIcon(QtGui.QIcon("icons/folder-light"))
-            item.href = href
-            self.addItem(item)
+            self.addItem(ContentItemWidget(title, href))
 
     def clean(self):
         if self.model() is not None:
             self.model().clear()
 
+    def pageOpen(self, page=None):
+        model = self.model()
+        if model is None: return None
+
+        self.clearSelection()
+
+        for x in range(0, model.rowCount()):
+
+            index = model.index(x)
+            if index is None: continue
+
+            widget = self.itemFromIndex(index)
+            if widget is None: continue
+
+            if widget.href != page:
+                continue
+
+            flag = QtCore.QItemSelectionModel.Select
+            self.selectionModel().setCurrentIndex(index, flag)
+
     def close(self):
-        super(ContentTableWidget, self).deleteLater()
-        return super(ContentTableWidget, self).close()
+        super(ContentWidget, self).deleteLater()
+        return super(ContentWidget, self).close()
 
 
-class ContentPagesWidget(QtWidgets.QListWidget):
-    page = QtCore.pyqtSignal(object)
-    book = QtCore.pyqtSignal(object)
+class ContentTableWidget(ContentWidget):
+    pass
 
-    def __init__(self, parent=None):
-        super(ContentPagesWidget, self).__init__(parent)
-        self.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
-        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.setMinimumWidth(200)
 
-        self.clicked.connect(self.pageEvent)
-        self.book.connect(self.bookEvent)
-
-    def pageEvent(self, index=None):
-        for index in self.selectedIndexes():
-            item = self.itemFromIndex(index)
-            self.page.emit(item.href)
+class ContentPagesWidget(ContentWidget):
 
     def bookEvent(self, book=None):
+        if self.model() is None or not self.model():
+            self.setModel(QtGui.QStandardItemModel())
 
-        if self.model() is None:
-            model = QtGui.QStandardItemModel()
-            self.setModel(model)
-
-        for index, page in enumerate(book.get_pages(), start=1):
-            item = QtWidgets.QListWidgetItem('Page: {}'.format(index))
-            item.setIcon(QtGui.QIcon("icons/folder-light"))
-            item.href = page
-            self.addItem(item)
-
-    def clean(self):
-        if self.model() is not None:
-            self.model().clear()
-
-    def close(self):
-        super(ContentPagesWidget, self).deleteLater()
-        return super(ContentPagesWidget, self).close()
+        for index, href in enumerate(book.get_pages(), start=1):
+            title = 'Page: {}'.format(index)
+            self.addItem(ContentItemWidget(title, href))

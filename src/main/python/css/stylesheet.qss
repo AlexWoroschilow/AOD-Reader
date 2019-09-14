@@ -17,14 +17,14 @@ ReaderWidget QListView::item:hover:selected { alternate-background-color: #41464
 ReaderWidget QListView::item:selected { alternate-background-color: #414649; border-bottom: 1px solid #414649; background: #414649; }
 
 ReaderWidget PageContentTable QTabBar::tab { background: #414649; color: rgb(236,236,236); border-right: 1px solid #414649; padding: 5px; }
-ReaderWidget PageContentTable QTabBar::tab:selected { background: #515659; }
-ReaderWidget PageContentTable QTabBar::tab:!selected { background: #414649; }
+ReaderWidget PageContentTable QTabBar::tab:selected { background: #414649; }
+ReaderWidget PageContentTable QTabBar::tab:!selected { background: #515659; }
 ReaderWidget PageContentTable QTabBar::close-button { image: url(icons/close-light); }
 ReaderWidget PageContentTable QTabBar { color: #4F4F4F; font-size: 16px; }
 ReaderWidget PageContentTable { background: #414649; border: none; }
 
-ReaderWidget QTabBar::tab:selected { background: #515659; }
-ReaderWidget QTabBar::tab:!selected { background: #414649; }
+ReaderWidget QTabBar::tab:selected { background: #414649; }
+ReaderWidget QTabBar::tab:!selected { background: #515659; }
 ReaderWidget QTabBar::close-button { image: url(icons/close-light); }
 ReaderWidget QTabBar::tab { background: #414649; color: rgb(236,236,236); border-right: 1px solid #414649; padding: 5px; }
 ReaderWidget QTabBar { color: #4F4F4F; font-size: 20px; }

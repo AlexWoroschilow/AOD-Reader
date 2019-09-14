@@ -61,6 +61,6 @@ class Loader(object):
 
         reader.back.connect(window.collection.emit)
         reader.translate.connect(window.translate.emit)
-        reader.book.emit(book)
+        reader.open(book)
 
         window.setCentralWidget(reader)

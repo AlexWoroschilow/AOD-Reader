@@ -17,6 +17,7 @@ from PyQt5.QtCore import Qt
 
 from .bar import CollectionToolbarWidget
 from .dashboard.scroll import PreviewScrollArea
+from .list import DictionaryListWidget
 
 
 class CollectionWidget(QtWidgets.QWidget):
@@ -24,8 +25,7 @@ class CollectionWidget(QtWidgets.QWidget):
     settings = QtCore.pyqtSignal(object)
     book = QtCore.pyqtSignal(object)
 
-    @inject.params(storage='storage')
-    def __init__(self, parent, storage):
+    def __init__(self, parent):
         super(CollectionWidget, self).__init__(parent)
         self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self.setContentsMargins(0, 0, 0, 0)
@@ -40,6 +40,19 @@ class CollectionWidget(QtWidgets.QWidget):
         toolbar.settings.connect(self.settings.emit)
         self.layout().addWidget(toolbar)
 
-        scroll = PreviewScrollArea(self, storage.collection())
-        scroll.book.connect(self.book.emit)
-        self.layout().addWidget(scroll)
+        self.scroll = DictionaryListWidget()
+        self.scroll.book.connect(self.book.emit)
+        self.layout().addWidget(self.scroll)
+
+        self.progress = QtWidgets.QProgressBar(self)
+        self.progress.setGeometry(200, 80, 250, 20)
+        self.progress.setValue(50)
+
+        self.layout().addWidget(self.progress)
+
+    def show(self):
+        self.scroll.show()
+        super(CollectionWidget, self).show()
+
+    def append(self, book):
+        self.scroll.append(book)

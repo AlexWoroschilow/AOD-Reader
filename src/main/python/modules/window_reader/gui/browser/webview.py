@@ -92,8 +92,8 @@ class MyWebEngineView(QWebEngineView):
     @inject.params(config='config')
     def scrollPositionEvent(self, position, config):
         book_unique = self.ebook.get_unique()
+        if book_unique is None: return None
         config.set('{}.position'.format(book_unique), position)
-        print(config.get('{}.position'.format(book_unique)))
 
     @inject.params(config='config')
     def bookEvent(self, book=None, config=None):
@@ -103,13 +103,7 @@ class MyWebEngineView(QWebEngineView):
 
         self.setZoomFactor(self.zoom)
 
-        book_unique = self.ebook.get_unique()
-        page_current = config.get('{}.page'.format(book_unique), '')
-        if page_current is not None and len(page_current):
-            return self.page().load(QtCore.QUrl(page_current))
-
         for path in self.ebook.get_pages():
-            config.set('{}.page'.format(book_unique), path)
             return self.page().load(QtCore.QUrl(path))
 
     @inject.params(config='config')

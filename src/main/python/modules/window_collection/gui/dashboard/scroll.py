@@ -25,11 +25,9 @@ class PreviewScrollArea(QtWidgets.QScrollArea):
     book = QtCore.pyqtSignal(object)
     columns = 2
 
-    def __init__(self, parent, collection=[]):
+    def __init__(self, parent):
         super(PreviewScrollArea, self).__init__(parent)
         self.setContentsMargins(0, 0, 0, 0)
-
-        self.collection = collection
 
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
@@ -41,42 +39,45 @@ class PreviewScrollArea(QtWidgets.QScrollArea):
         self.show()
 
     def resizeEvent(self, event):
-        columns = round(event.size().width() / 200)
+        size = event.size()
+        columns = math.floor(size.width() / 200)
         if columns and self.columns != columns:
             self.columns = columns if columns > 0 else 1
             self.show()
         return super(PreviewScrollArea, self).resizeEvent(event)
 
     def show(self, status=None, storage=None):
-        if not self.clean():
-            return None
 
-        for position, element in enumerate(self.collection):
-            widget = PreviewWidget(element)
-            widget.book.connect(self.book.emit)
-            widget.setFixedHeight(200)
+        widgets = []
+        layout = self.container.layout()
+        for x in range(0, layout.count()):
+            item = layout.itemAt(x)
+            if item is None: layout.takeAt(x)
+            if item is None: continue
+            widgets.append(item.widget())
 
-            i = math.floor(position / self.columns)
-            j = math.floor(position % self.columns)
-            self.container.layout().addWidget(widget, i, j)
+        for x, widget in enumerate(widgets, start=0):
+            i = math.floor(x / self.columns)
+            j = math.floor(x % self.columns)
+            layout.addWidget(widget, i, j)
 
         return super(PreviewScrollArea, self).show()
 
-    def clean(self):
+    def append(self, book=None):
+        if book is None:
+            return None
+
         layout = self.container.layout()
-        if not layout.count():
-            return True
+        position = layout.count()
 
-        for i in range(0, layout.count()):
-            item = layout.itemAt(i)
-            if item is None:
-                layout.takeAt(i)
+        widget = PreviewWidget(book)
+        widget.book.connect(self.book.emit)
+        widget.setFixedHeight(200)
 
-            widget = item.widget()
-            if item is not None:
-                widget.close()
+        i = math.floor(position / self.columns)
+        j = math.floor(position % self.columns)
 
-        return True
+        layout.addWidget(widget, i, j)
 
     def close(self):
         super(PreviewScrollArea, self).deleteLater()
