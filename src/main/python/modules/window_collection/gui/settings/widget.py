@@ -13,49 +13,54 @@
 import inject
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt
+from PyQt5 import QtCore
+from PyQt5 import QtGui
 
 from . import SettingsTitle
 from . import WidgetSettings
 
 
-class SettingsWidget(WidgetSettings):
+class WidgetSettingsSearch(WidgetSettings):
+    started = QtCore.pyqtSignal(object)
+    finished = QtCore.pyqtSignal(object)
+    progress = QtCore.pyqtSignal(object)
 
-    @inject.params(config='config')
-    def __init__(self, config=None):
-        super(SettingsWidget, self).__init__()
+    def __init__(self, thread):
+        super(WidgetSettingsSearch, self).__init__()
 
-        layout = QtWidgets.QGridLayout()
-        layout.setAlignment(Qt.AlignLeft)
-        self.setLayout(layout)
+        thread.progress.connect(self.progress.emit)
+        thread.finished.connect(self.finished.emit)
+        thread.started.connect(self.started.emit)
 
-        self.layout().addWidget(SettingsTitle('Translation'), 0, 0)
+        self.layout = QtWidgets.QVBoxLayout()
+        self.layout.setAlignment(Qt.AlignLeft)
 
-        self.showall = QtWidgets.QCheckBox('Show translations from all dictionaries')
-        self.showall.setChecked(int(config.get('translator.all')))
-        self.showall.stateChanged.connect(self.onActionShowAll)
-        self.layout().addWidget(self.showall, 1, 0)
+        self.layout.addWidget(SettingsTitle('Fulltext search:'))
 
-        self.lowercase = QtWidgets.QCheckBox('Convert to lowercase before translate')
-        self.lowercase.setChecked(int(config.get('clipboard.uppercase')))
-        self.lowercase.stateChanged.connect(self.onActionUpperCase)
-        self.layout().addWidget(self.lowercase, 2, 0)
+        progressbar = QtWidgets.QProgressBar(self)
+        progressbar.setVisible(False)
+        self.layout.addWidget(progressbar)
 
-        self.extrachars = QtWidgets.QCheckBox('Remove extra characters before translate')
-        self.extrachars.setChecked(int(config.get('clipboard.extrachars')))
-        self.extrachars.stateChanged.connect(self.onActionExtraChars)
-        self.layout().addWidget(self.extrachars, 3, 0)
+        self.rebuild = QtWidgets.QPushButton("rebuild search index")
+        self.rebuild.setIcon(QtGui.QIcon("icons/refresh"))
+        self.rebuild.setToolTip("Build new index. This may take some time.")
+        self.rebuild.clicked.connect(thread.start)
+        self.rebuild.setFlat(True)
+        self.layout.addWidget(self.rebuild)
 
-    @inject.params(config='config')
-    def onActionUpperCase(self, event, config):
-        value = '{}'.format(int(event))
-        config.set('clipboard.uppercase', value)
+        thread.started.connect(lambda x: self.rebuild.setVisible(False))
+        thread.progress.connect(lambda x: self.rebuild.setVisible(False))
+        thread.finished.connect(lambda x: self.rebuild.setVisible(True))
 
-    @inject.params(config='config')
-    def onActionExtraChars(self, event, config):
-        value = '{}'.format(int(event))
-        config.set('clipboard.extrachars', value)
+        thread.started.connect(lambda x: progressbar.setVisible(True))
+        thread.progress.connect(lambda x: progressbar.setVisible(True))
+        thread.progress.connect(lambda x: progressbar.setValue(x))
+        thread.finished.connect(lambda x: progressbar.setVisible(False))
 
-    @inject.params(config='config')
-    def onActionShowAll(self, event, config):
-        value = '{}'.format(int(event))
-        config.set('translator.all', value)
+        spacer = QtWidgets.QWidget()
+        spacer.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        self.layout.addWidget(spacer)
+
+        self.setLayout(self.layout)
+
+        self.show()

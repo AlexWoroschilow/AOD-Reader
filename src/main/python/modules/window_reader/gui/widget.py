@@ -27,60 +27,72 @@ class ReaderWidget(QtWidgets.QTabWidget):
     translate = QtCore.pyqtSignal(object)
     page = QtCore.pyqtSignal(object)
     book = QtCore.pyqtSignal(object)
+    export = QtCore.pyqtSignal(object)
     back = QtCore.pyqtSignal(object)
+
+    ebook = None
 
     @inject.params(history='widget.history')
     def __init__(self, parent=None, history=None):
         super(ReaderWidget, self).__init__(parent)
+
         self.setTabPosition(QtWidgets.QTabWidget.West)
         self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self.setContentsMargins(0, 0, 0, 0)
 
-        self.ctable = ContentTableWidget(self)
-        self.cpages = ContentPagesWidget(self)
+        ctable = ContentTableWidget(self)
+        ctable.page.connect(self.page.emit)
 
-        self.ctable.page.connect(self.cpages.pageOpen)
-        self.cpages.page.connect(self.ctable.pageOpen)
+        cpages = ContentPagesWidget(self)
+        cpages.page.connect(self.page.emit)
+        # If the page was selected in the content table list
+        # we need to mark the similar page in the content pages list
+        ctable.page.connect(cpages.pageOpen)
+        # If the page was selected in the content pages list
+        # we need to mark the similar page in the content table list
+        cpages.page.connect(ctable.pageOpen)
+        # There may be some history with the book
+        # we have to open the page user stopped to read at
+        # in the "content table" tab and in the "content pages" tab
+        self.page.connect(ctable.pageOpen)
+        self.page.connect(cpages.pageOpen)
 
-        self.ctable.page.connect(self.page.emit)
-        self.cpages.page.connect(self.page.emit)
+        tab_bar = PageContentTable()
+        tab_bar.addTab(cpages, 'Pages')
+        tab_bar.addTab(ctable, 'Content table')
 
-        tab = PageContentTable()
-        tab.addTab(self.cpages, 'Pages')
-        tab.addTab(self.ctable, 'Content table')
-
-        self.browser = BrowserWidget(self)
-        self.browser.translate.connect(self.translate.emit)
-        self.browser.back.connect(self.back.emit)
+        browser = BrowserWidget(self)
+        browser.export.connect(lambda x: self.export.emit(self.ebook))
+        browser.translate.connect(self.translate.emit)
+        browser.back.connect(self.back.emit)
 
         splitter = QtWidgets.QSplitter(self)
         splitter.setContentsMargins(0, 0, 0, 0)
         splitter.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
-        splitter.addWidget(tab)
-        splitter.addWidget(self.browser)
+        splitter.addWidget(tab_bar)
+        splitter.addWidget(browser)
 
         splitter.setStretchFactor(1, 2)
         splitter.setStretchFactor(2, 3)
 
-        self.insertTab(0, splitter, 'Reader')
-        self.insertTab(1, history, 'History')
+        self.addTab(splitter, 'Reader')
+        self.addTab(history, 'History')
 
-        self.book.connect(self.browser.book.emit)
-        self.page.connect(self.browser.page.emit)
-        self.page.connect(self.ctable.pageOpen)
-        self.page.connect(self.cpages.pageOpen)
-
+        self.book.connect(browser.book.emit)
+        self.page.connect(browser.page.emit)
         self.book.connect(history.book.emit)
         self.translate.connect(history.translate.emit)
 
-        self.book.connect(self.ctable.book.emit)
-        self.book.connect(self.cpages.book.emit)
+        self.book.connect(ctable.book.emit)
+        self.book.connect(cpages.book.emit)
 
     @inject.params(config='config')
     def open(self, ebook=None, config=None):
         if ebook is None: return None
         if config is None: return None
+
+        self.ebook = ebook
 
         self.book.emit(ebook)
 

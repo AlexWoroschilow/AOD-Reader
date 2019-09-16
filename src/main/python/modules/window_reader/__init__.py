@@ -11,9 +11,12 @@
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 import inject
+import functools
+from .actions import ReaderActions
 
 
 class Loader(object):
+    actions = ReaderActions()
 
     def __enter__(self):
         return self
@@ -41,7 +44,13 @@ class Loader(object):
     @inject.params(window='window')
     def _provider_reader(self, window=None):
         from .gui.widget import ReaderWidget
-        return ReaderWidget(window)
+
+        widget = ReaderWidget(window)
+        widget.export.connect(functools.partial(
+            self.actions.on_action_export, widget=widget
+        ))
+
+        return widget
 
     def enabled(self, options=None, args=None):
         return True

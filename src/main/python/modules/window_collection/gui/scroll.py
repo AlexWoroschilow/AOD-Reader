@@ -14,7 +14,22 @@ import os
 import platform
 from PyQt5.QtCore import Qt
 from PyQt5 import QtWidgets
-from .widget import SettingsWidget
+
+
+class WidgetSettings(QtWidgets.QWidget):
+    columns = 1
+
+    def __init__(self):
+        super(WidgetSettings, self).__init__()
+        self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+
+        self.layout = QtWidgets.QVBoxLayout()
+        self.layout.setAlignment(Qt.AlignTop)
+
+        self.setLayout(self.layout)
+
+    def addWidget(self, widget):
+        self.layout.addWidget(widget)
 
 
 class SettingsScrollArea(QtWidgets.QScrollArea):
@@ -26,12 +41,14 @@ class SettingsScrollArea(QtWidgets.QScrollArea):
         self.setAlignment(Qt.AlignTop)
         self.setWidgetResizable(True)
 
-        self.container = SettingsWidget()
+        self.container = WidgetSettings()
         self.setWidget(self.container)
 
-        if os.path.exists('css/linux.qss'):
-            with open('css/linux.qss') as stream:
-                self.setStyleSheet(stream.read())
+        stylesheet = 'css/{}.qss'.format(platform.system().lower())
+        if not os.path.exists(stylesheet):
+            return None
+
+        self.setStyleSheet(open(stylesheet).read())
 
     def addWidget(self, widget):
         self.container.addWidget(widget)

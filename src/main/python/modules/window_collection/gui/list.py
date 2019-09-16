@@ -57,11 +57,11 @@ class BookItem(QtWidgets.QListWidgetItem):
         self.setIcon(QtGui.QIcon(pixmap))
 
 
-class DictionaryListWidget(QtWidgets.QListWidget):
+class LibraryWidget(QtWidgets.QListWidget):
     book = QtCore.pyqtSignal(object)
 
     def __init__(self):
-        super(DictionaryListWidget, self).__init__()
+        super(LibraryWidget, self).__init__()
         self.setViewMode(QtWidgets.QListView.IconMode)
         self.setIconSize(QtCore.QSize(150, 200))
         self.setResizeMode(QtWidgets.QListView.Adjust)

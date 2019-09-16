@@ -42,3 +42,8 @@ HistoryWidget HistoryTable::item:selected { background-color: #1E90FF; }
 HistoryWidget HistoryTable QTableCornerButton::section { background: #ffffff; }
 HistoryWidget HistoryTable QHeaderView::section { background-color: #f0f0f0; color: #4F4F4F; padding: 5px 8px;  }
 HistoryWidget HistoryTable QHeaderView::section:checked { background-color: #1E90FF; }
+
+
+WidgetSettingsSearch { text-align: left; padding: 0px 0px 0px 50px; min-height: 400px; 	border-bottom: 1px; }
+WidgetSettingsSearch SettingsTitle { text-align: left; font-size: 18px; 	padding: 5px 0px; }
+WidgetSettingsSearch QPushButton { text-align: left; }

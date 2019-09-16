@@ -11,80 +11,77 @@
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 import inject
+import functools
+import logging
+
+from PyQt5 import QtWidgets
+from PyQt5 import QtGui
+
+from .gui.menu import SettingsMenu
+from .thread import SearchThread
 
 
 class TranslatorActions(object):
-    
-    def __init__(self, wiget, thread):
-        self.thread = thread
-        self.widget = wiget
-    
-    @inject.params(kernel='kernel')
-    def onSearchString(self, string, kernel=None):
-        if not len(string):
-            return None
+    thread = SearchThread()
 
-        self.thread.translate(string)
-        
-        kernel.dispatch('window.translation.request', string)
+    def __init__(self):
+        pass
 
-    @inject.params(kernel='kernel', widget='widget.translator_search')
-    def onActionTranslate(self, event, kernel, widget=None):
-        string = event.data
-        if not len(string):
-            return None
-         
-        self.thread.translate(string)
-            
-        kernel.dispatch('window.translation.request', string)
-        if widget is not None and widget:
-            return widget.setText(string)
+    def on_action_progress_started(self, event=None, widget=None):
+        if widget is None: return None
 
-    @inject.params(kernel='kernel', widget='widget.translator_search', dictionary='dictionary', config='config')
-    def onActionTranslateClipboard(self, event, kernel, widget, dictionary, config):
-        kernel.dispatch('window.translation.request', event.data)
-        
-        if widget is not None and widget:
-            widget.setText(event.data)
+        try:
+            widget.progress.setVisible(True)
+        except (RuntimeError, TypeError, NameError) as ex:
+            print(ex)
 
-        if int(config.get('clipboard.suggestions')):
-            return self.thread.translate(event.data)
-        
-        for translation in dictionary.translate(event.data):
-            self.widget.addTranslation(translation)
-            if not int(config.get('translator.all')):
-                break
-        return None
+    def on_action_progress_update(self, event=None, widget=None):
+        if widget is None: return None
 
-    @inject.params(dictionary='dictionary', config='config')
-    def onSuggestionSelected(self, string, dictionary, config):
-        self.widget.clearTranslation()
-        for translation in dictionary.translate(string):
-            self.widget.addTranslation(translation)
-            if not int(config.get('translator.all')):
-                break
+        try:
+            widget.progress.setVisible(True)
+            widget.progress.setValue(event)
+        except (RuntimeError, TypeError, NameError) as ex:
+            print(ex)
 
-    @inject.params(statusbar='widget.statusbar')
-    def onTranslationStarted(self, progress=None, statusbar=None):
-        self.widget.clearTranslation()
-        self.widget.clearSuggestion()
-        
-        if statusbar is not None and statusbar:
-            return statusbar.start(progress)
+    def on_action_progress_finished(self, event=None, widget=None):
+        if widget is None: return None
 
-    @inject.params(statusbar='widget.statusbar')
-    def onTranslationProgress(self, progress=None, translation=None, statusbar=None):
-        self.widget.addTranslation(translation)
-        if statusbar is not None and statusbar:
-            return statusbar.setProgress(progress)
+        try:
+            widget.progress.setVisible(False)
+        except (RuntimeError, TypeError, NameError) as ex:
+            print(ex)
 
-    @inject.params(statusbar='widget.statusbar')
-    def onTranslationProgressSuggestion(self, progress=None, string=None, statusbar=None):
-        self.widget.addSuggestion(string)
-        if statusbar is not None and statusbar:
-            return statusbar.setProgress(progress)
+    @inject.params(search='search')
+    def on_action_search(self, text=None, search=None, widget=None):
+        if widget is None: return None
 
-    @inject.params(statusbar='widget.statusbar')
-    def onTranslationFinished(self, progress=None, statusbar=None):
-        if statusbar is not None and statusbar:
-            statusbar.stop(progress)
+        for result in search.search(text):
+            print(result)
+
+    def on_action_clean(self, event=None, widget=None):
+        if widget is None: return None
+        print(event, widget)
+
+    def on_action_settings(self, button=None, widget=None):
+        if widget is None: return None
+
+        menu = QtWidgets.QMenu()
+
+        menu_search = SettingsMenu(widget, self.thread)
+
+        menu_search.started.connect(functools.partial(
+            self.on_action_progress_started, widget=widget
+        ))
+        menu_search.progress.connect(functools.partial(
+            self.on_action_progress_started, widget=widget
+        ))
+        menu_search.progress.connect(functools.partial(
+            self.on_action_progress_update, widget=widget
+        ))
+        menu_search.finished.connect(functools.partial(
+            self.on_action_progress_finished, widget=widget
+        ))
+
+        menu.addAction(menu_search)
+        menu.exec_(QtGui.QCursor.pos())

@@ -12,12 +12,18 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 import inject
 import functools
+import logging
 
 from .thread import CollectionThread
+from .thread import SearchThread
+
 from .gui.widget import CollectionWidget
+from .actions import TranslatorActions
 
 
 class Loader(object):
+    thread = None
+    actions = TranslatorActions()
 
     def __enter__(self):
         return self
@@ -25,25 +31,54 @@ class Loader(object):
     def __exit__(self, type, value, traceback):
         pass
 
+    def __init__(self):
+        self.thread = CollectionThread()
+
     @inject.params(window='window')
-    def _provider_collection(self, window=None):
-        thread = CollectionThread()
+    def _provider_library(self, window=None):
+
+        try:
+            self.thread.started.disconnect()
+            self.thread.finished.disconnect()
+            self.thread.progress.disconnect()
+            self.thread.book.disconnect()
+        except (Exception, RuntimeError, TypeError, NameError) as ex:
+            logger = logging.getLogger('library')
+            logger.error("{}".format(ex))
 
         widget = CollectionWidget(window)
-        thread.started.connect(lambda x: widget.progress.setVisible(True))
-        thread.finished.connect(lambda x: widget.progress.setVisible(False))
-        thread.progress.connect(lambda x: widget.progress.setValue(x))
-        thread.book.connect(widget.append)
+        widget.settings.connect(functools.partial(
+            self.actions.on_action_settings, widget=widget
+        ))
+        widget.search.connect(functools.partial(
+            self.actions.on_action_search, widget=widget
+        ))
+        widget.clean.connect(functools.partial(
+            self.actions.on_action_clean, widget=widget
+        ))
 
-        thread.start()
+        try:
 
-        return widget
+            self.thread.started.connect(functools.partial(
+                self.actions.on_action_progress_started, widget=widget
+            ))
+            self.thread.progress.connect(functools.partial(
+                self.actions.on_action_progress_started, widget=widget
+            ))
+            self.thread.progress.connect(functools.partial(
+                self.actions.on_action_progress_update, widget=widget
+            ))
+            self.thread.finished.connect(functools.partial(
+                self.actions.on_action_progress_finished, widget=widget
+            ))
 
-    @inject.params(config='config')
-    def _widget_settings(self, config=None):
-        from .gui.settings.widget import SettingsWidget
+            self.thread.book.connect(lambda x: widget.append(x))
 
-        widget = SettingsWidget()
+        except (Exception, RuntimeError, TypeError, NameError) as ex:
+            logger = logging.getLogger('library')
+            logger.error("{}".format(ex))
+
+        self.thread.start()
 
         return widget
 
@@ -51,20 +86,22 @@ class Loader(object):
         return True
 
     def configure(self, binder, options=None, args=None):
-        binder.bind_to_provider('window.collection', self._provider_collection)
+        binder.bind_to_provider('window.collection', self._provider_library)
 
     @inject.params(window='window', widget='window.collection')
     def boot(self, options, args, window=None, widget=None):
-        widget.book.connect(window.reader.emit)
+        if widget is None: return None
+        if window is None: return None
 
-        if window is None:
-            return None
+        widget.book.connect(window.reader.emit)
 
         window.collection.connect(self.onWindowCollection)
         window.setCentralWidget(widget)
 
     @inject.params(window='window', widget='window.collection')
     def onWindowCollection(self, event, window=None, widget=None):
-        widget.book.connect(window.reader.emit)
+        if widget is None: return None
+        if window is None: return None
 
+        widget.book.connect(window.reader.emit)
         window.setCentralWidget(widget)

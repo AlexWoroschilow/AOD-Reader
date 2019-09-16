@@ -21,6 +21,7 @@ from .label import Title
 
 class BrowserToolbarWidget(QtWidgets.QWidget):
     settings = QtCore.pyqtSignal(object)
+    export = QtCore.pyqtSignal(object)
     back = QtCore.pyqtSignal(object)
     book = QtCore.pyqtSignal(object)
 
@@ -42,6 +43,12 @@ class BrowserToolbarWidget(QtWidgets.QWidget):
         self.title.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)
         self.title.setAlignment(Qt.AlignLeft)
         self.layout().addWidget(self.title)
+
+        export = PictureButtonFlat(QtGui.QIcon("icons/export"))
+        export.setFlat(False)
+        export.clicked.connect(self.export.emit)
+        self.layout().addWidget(export)
+        self.book.connect(self.bookEvent)
 
         settings = PictureButtonFlat(QtGui.QIcon("icons/settings"))
         settings.clicked.connect(self.settings.emit)

@@ -10,20 +10,19 @@
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-import inject
 from PyQt5 import QtWidgets
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
 
 from .bar import CollectionToolbarWidget
-from .dashboard.scroll import PreviewScrollArea
-from .list import DictionaryListWidget
+from .list import LibraryWidget
 
 
 class CollectionWidget(QtWidgets.QWidget):
     search = QtCore.pyqtSignal(object)
     settings = QtCore.pyqtSignal(object)
     book = QtCore.pyqtSignal(object)
+    clean = QtCore.pyqtSignal(object)
 
     def __init__(self, parent):
         super(CollectionWidget, self).__init__(parent)
@@ -36,11 +35,12 @@ class CollectionWidget(QtWidgets.QWidget):
         self.setLayout(layout)
 
         toolbar = CollectionToolbarWidget()
-        toolbar.search.connect(self.search.emit)
         toolbar.settings.connect(self.settings.emit)
+        toolbar.search.connect(self.search.emit)
+        toolbar.clean.connect(self.clean.emit)
         self.layout().addWidget(toolbar)
 
-        self.scroll = DictionaryListWidget()
+        self.scroll = LibraryWidget()
         self.scroll.book.connect(self.book.emit)
         self.layout().addWidget(self.scroll)
 

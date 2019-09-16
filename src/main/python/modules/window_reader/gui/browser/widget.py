@@ -24,6 +24,7 @@ class BrowserWidget(QtWidgets.QFrame):
     back = QtCore.pyqtSignal(object)
     page = QtCore.pyqtSignal(object)
     book = QtCore.pyqtSignal(object)
+    export = QtCore.pyqtSignal(object)
 
     @inject.params(browser='window.browser', translator='window.translator')
     def __init__(self, parent, browser=None, translator=None):
@@ -32,6 +33,7 @@ class BrowserWidget(QtWidgets.QFrame):
 
         self.toolbar = BrowserToolbarWidget(self)
         self.toolbar.back.connect(self.back.emit)
+        self.toolbar.export.connect(self.export.emit)
         self.layout().addWidget(self.toolbar)
 
         self.browser = browser

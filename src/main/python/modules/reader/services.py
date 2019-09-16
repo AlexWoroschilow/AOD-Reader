@@ -95,6 +95,11 @@ class BookReader(object):
 
         return uuid.uuid5(uuid.NAMESPACE_URL, path)
 
+    def get_path(self, path=None):
+        if path is None:
+            return self.ebook
+        return path
+
     def get_title(self):
         try:
 

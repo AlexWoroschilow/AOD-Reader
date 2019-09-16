@@ -34,6 +34,6 @@ class MainWindow(QtWidgets.QMainWindow):
         if os.path.exists('icons/reader.svg'):
             self.setWindowIcon(QtGui.QIcon("icons/reader"))
 
-        if os.path.exists('css/stylesheet.qss'):
-            with open('css/stylesheet.qss') as stream:
+        if os.path.exists('css/linux.qss'):
+            with open('css/linux.qss') as stream:
                 self.setStyleSheet(stream.read())
