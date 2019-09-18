@@ -21,6 +21,7 @@ from .button import PictureButtonFlat
 class CollectionToolbarWidget(QtWidgets.QWidget):
     search = QtCore.pyqtSignal(object)
     settings = QtCore.pyqtSignal(object)
+    download = QtCore.pyqtSignal(object)
     clean = QtCore.pyqtSignal(object)
 
     def __init__(self):
@@ -31,6 +32,11 @@ class CollectionToolbarWidget(QtWidgets.QWidget):
         layout = QtWidgets.QHBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(layout)
+
+        download = PictureButtonFlat(QtGui.QIcon('icons/import'))
+        download.setFlat(False)
+        download.clicked.connect(self.download.emit)
+        self.layout().addWidget(download)
 
         spacer = QtWidgets.QWidget()
         spacer.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)

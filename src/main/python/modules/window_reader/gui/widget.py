@@ -36,7 +36,7 @@ class ReaderWidget(QtWidgets.QTabWidget):
     def __init__(self, parent=None, history=None):
         super(ReaderWidget, self).__init__(parent)
 
-        self.setTabPosition(QtWidgets.QTabWidget.West)
+        self.setTabPosition(QtWidgets.QTabWidget.South)
         self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self.setContentsMargins(0, 0, 0, 0)
 

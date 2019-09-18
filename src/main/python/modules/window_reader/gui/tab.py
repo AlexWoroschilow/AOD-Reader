@@ -20,5 +20,5 @@ class PageContentTable(QtWidgets.QTabWidget):
     @inject.params(kernel='kernel', logger='logger')
     def __init__(self, parent=None, kernel=None, logger=None):
         super(PageContentTable, self).__init__(parent)
-        self.setTabPosition(QtWidgets.QTabWidget.North)
+        self.setTabPosition(QtWidgets.QTabWidget.West)
         self.setContentsMargins(0, 0, 0, 0)
