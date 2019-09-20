@@ -25,6 +25,7 @@ class BrowserWidget(QtWidgets.QFrame):
     page = QtCore.pyqtSignal(object)
     book = QtCore.pyqtSignal(object)
     export = QtCore.pyqtSignal(object)
+    zoom = QtCore.pyqtSignal(object)
 
     @inject.params(browser='window.browser', translator='window.translator')
     def __init__(self, parent, browser=None, translator=None):
@@ -34,6 +35,8 @@ class BrowserWidget(QtWidgets.QFrame):
         self.toolbar = BrowserToolbarWidget(self)
         self.toolbar.back.connect(self.back.emit)
         self.toolbar.export.connect(self.export.emit)
+        self.toolbar.zoom.connect(self.zoom.emit)
+
         self.layout().addWidget(self.toolbar)
 
         self.browser = browser
@@ -53,6 +56,8 @@ class BrowserWidget(QtWidgets.QFrame):
         splitter.setStretchFactor(2, 2)
 
         self.layout().addWidget(splitter)
+
+        self.zoom.connect(self.browser.zoom.emit)
         self.page.connect(self.browser.bookPage.emit)
         self.book.connect(self.browser.book.emit)
         self.book.connect(self.toolbar.book.emit)

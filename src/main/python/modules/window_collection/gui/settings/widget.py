@@ -35,13 +35,13 @@ class WidgetSettingsSearch(WidgetSettings):
         self.layout = QtWidgets.QVBoxLayout()
         self.layout.setAlignment(Qt.AlignLeft)
 
-        self.layout.addWidget(SettingsTitle('Fulltext search:'))
+        self.layout.addWidget(SettingsTitle('Fulltext search'))
 
         progressbar = QtWidgets.QProgressBar(self)
         progressbar.setVisible(False)
         self.layout.addWidget(progressbar)
 
-        self.rebuild = QtWidgets.QPushButton("rebuild search index")
+        self.rebuild = QtWidgets.QPushButton("update search index")
         self.rebuild.setIcon(QtGui.QIcon("icons/refresh"))
         self.rebuild.setToolTip("Build new index. This may take some time.")
         self.rebuild.clicked.connect(thread.start)

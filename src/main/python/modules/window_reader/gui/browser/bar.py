@@ -17,6 +17,7 @@ from PyQt5.QtCore import Qt
 
 from .button import PictureButtonFlat
 from .label import Title
+from .menu import SettingsMenu
 
 
 class BrowserToolbarWidget(QtWidgets.QWidget):
@@ -24,6 +25,7 @@ class BrowserToolbarWidget(QtWidgets.QWidget):
     export = QtCore.pyqtSignal(object)
     back = QtCore.pyqtSignal(object)
     book = QtCore.pyqtSignal(object)
+    zoom = QtCore.pyqtSignal(object)
 
     def __init__(self, parent):
         super(BrowserToolbarWidget, self).__init__(parent)
@@ -36,6 +38,7 @@ class BrowserToolbarWidget(QtWidgets.QWidget):
         self.setLayout(layout)
 
         back = PictureButtonFlat(QtGui.QIcon("icons/back"))
+        back.setShortcut('Esc')
         back.clicked.connect(self.back.emit)
         self.layout().addWidget(back)
 
@@ -45,13 +48,15 @@ class BrowserToolbarWidget(QtWidgets.QWidget):
         self.layout().addWidget(self.title)
 
         export = PictureButtonFlat(QtGui.QIcon("icons/export"))
+        export.setShortcut('Ctrl+E')
         export.setFlat(False)
         export.clicked.connect(self.export.emit)
         self.layout().addWidget(export)
         self.book.connect(self.bookEvent)
 
-        settings = PictureButtonFlat(QtGui.QIcon("icons/settings"))
+        settings = PictureButtonFlat(QtGui.QIcon("icons/icons"))
         settings.clicked.connect(self.settings.emit)
+        settings.clicked.connect(self.menu)
         self.layout().addWidget(settings)
         self.book.connect(self.bookEvent)
 
@@ -60,3 +65,12 @@ class BrowserToolbarWidget(QtWidgets.QWidget):
             return None
 
         self.title.setText(book.get_title())
+
+    def menu(self, event=None):
+        menu = QtWidgets.QMenu()
+
+        menu_widget = SettingsMenu(self)
+        menu_widget.zoom.connect(self.zoom.emit)
+
+        menu.addAction(menu_widget)
+        menu.exec_(QtGui.QCursor.pos())

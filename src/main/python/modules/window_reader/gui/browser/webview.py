@@ -48,20 +48,24 @@ class MyWebEnginePage(QWebEnginePage):
 
 
 class MyWebEngineView(QWebEngineView):
-    zoom = 1
-    zoomPixelMax = 150
+    zoom_factor = 1
+    zoom_factorPixelMax = 150
 
     translate = QtCore.pyqtSignal(object)
     bookPage = QtCore.pyqtSignal(object)
     book = QtCore.pyqtSignal(object)
+    zoom = QtCore.pyqtSignal(object)
 
     @inject.params(config='config')
     def __init__(self, config):
         self.clipboard = QtWidgets.QApplication.clipboard()
-        self.zoom = float(config.get('browser.zoom', 1))
-        self.ebook = None
 
         super(MyWebEngineView, self).__init__()
+        self.zoom.connect(self.zoomEvent)
+
+        zoom = config.get('browser.zoom', 1)
+        self.zoom.emit(float(zoom))
+
         self.bookPage.connect(self.pageEvent)
         self.book.connect(self.bookEvent)
 
@@ -77,14 +81,19 @@ class MyWebEngineView(QWebEngineView):
         self.translate.emit(text)
 
     @inject.params(config='config')
+    def zoomEvent(self, value=1, config=None):
+        self.zoom_factor = value
+        config.set('browser.zoom', self.zoom_factor)
+        self.setZoomFactor(self.zoom_factor)
+
+    @inject.params(config='config')
     def wheelEvent(self, event, config):
         modifiers = QtWidgets.QApplication.keyboardModifiers()
         if modifiers == QtCore.Qt.ControlModifier:
             point = event.pixelDelta()
-            self.zoom = self.zoom + (point.y() / self.zoomPixelMax)
-            if self.zoom >= 0 and self.zoom <= 5:
-                config.set('browser.zoom', self.zoom)
-                self.setZoomFactor(self.zoom)
+            self.zoom_factor = self.zoom_factor + (point.y() / self.zoom_factorPixelMax)
+            if self.zoom_factor >= 0 and self.zoom_factor <= 5:
+                self.zoom.emit(self.zoom_factor)
 
         self.page().getScrollPosition(self.scrollPositionEvent)
         return super(MyWebEngineView, self).wheelEvent(event)
@@ -101,7 +110,7 @@ class MyWebEngineView(QWebEngineView):
         self.clipboard.selectionChanged.connect(self.translateEvent)
         self.ebook = book
 
-        self.setZoomFactor(self.zoom)
+        self.setZoomFactor(self.zoom_factor)
 
         for path in self.ebook.get_pages():
             return self.page().load(QtCore.QUrl(path))

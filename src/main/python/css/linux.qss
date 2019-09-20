@@ -51,4 +51,9 @@ WidgetSettingsSearch SettingsTitle { text-align: left; font-size: 18px; 	padding
 WidgetSettingsSearch QPushButton { text-align: left; }
 
 
+
+WidgetSettings {     text-align: center; 	padding: 0px 30px 20px 30px; 	max-width: 600px; 	border-bottom: 1px; }
+WidgetSettings SettingsTitle {     text-align: center; 	font-size: 18px; 	padding: 5px 0px; }
+
+
 CollectionToolbarWidget PictureButtonFlat { padding: 3px; margin: 5px 5px 5px 10px; }
